@@ -1,7 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Drawing;
 using System.Windows.Forms;
-using System.Collections.Generic;
+using static Real_ESRGAN_GUI.MainForm;
 
 namespace Real_ESRGAN_GUI
 {
@@ -18,7 +19,6 @@ namespace Real_ESRGAN_GUI
 
             // 获取新的 DPI 缩放因子
             float newScale = e.DeviceDpiNew / 96.0f;
-            Bounds = e.SuggestedRectangle;
 
             INITIALIZE_MAINFORM_SIZE(newScale);
 
@@ -36,17 +36,6 @@ namespace Real_ESRGAN_GUI
 
             InitializeLanguageTexts();
             UpdateLanguage();
-        }
-
-        private float GET_SCALE()
-        {
-            float dpi;
-            using (Graphics g = CreateGraphics())
-            {
-                dpi = g.DpiX;
-            }
-
-            return dpi / 96.0f;
         }
 
         private void InitializeLanguageTexts()
@@ -150,6 +139,7 @@ namespace Real_ESRGAN_GUI
             Size = new Size((int)(baseWidth * scale), (int)(baseHeight * scale));
 
             INITIALIZE_TABLE_LAYOUT_PANEL_PIXEL();
+            INITIALIZE_PICTUREBOX_SIZE();
             INITIALIZE_UI_FONT_SIZE();
         }
 
@@ -195,18 +185,38 @@ namespace Real_ESRGAN_GUI
             panel.RowStyles[num].Height = fontSize;
         }
 
+        private void INITIALIZE_PICTUREBOX_SIZE()
+        {
+            SET_PICTUREBOX_SIZE(MainPic, Size.Width, Size.Height, Parameters.systemScale);
+        }
+
+        private void SET_PICTUREBOX_SIZE(PictureBox pb, float baseWidth, float baseHeight, float scale)
+        {
+            if (pb == null)
+            {
+                return;
+            }
+
+            pb.SizeMode = PictureBoxSizeMode.Zoom;
+
+            int newWidth = (int)(baseWidth * scale);
+            int newHeight = (int)(baseHeight * scale);
+
+            pb.Size = new Size(newWidth, newHeight);
+        }
+
         private void INITIALIZE_UI_FONT_SIZE()
         {
-            SET_FONT_SIZE(MainLabel, Font.Size);
-            SET_FONT_SIZE(LinkLabelGitHub, Font.Size);
-            SET_FONT_SIZE(LinkLabelLicense, Font.Size);
-            SET_FONT_SIZE(LabelCopyRight, Font.Size / 2);
-            ButtonConfirm.Font = new Font(ButtonConfirm.Font.FontFamily, Font.Size, ButtonConfirm.Font.Style);
+            SET_FONT_SIZE(MainLabel, Font.Size * 2f);
+            SET_FONT_SIZE(LinkLabelGitHub, Font.Size * 1.5f);
+            SET_FONT_SIZE(LinkLabelLicense, Font.Size * 1.5f);
+            SET_FONT_SIZE(LabelCopyRight, Font.Size * 0.8f);
+            SET_FONT_SIZE(ButtonConfirm, Font.Size);
         }
 
         private void SET_FONT_SIZE(Control obj, float fontSize)// 使用dynamic或Control绕过编译时的类型检查，直到运行时才解析
         {
-            obj.Font = new Font(obj.Font.FontFamily, fontSize * systemScale, obj.Font.Style);
+            obj.Font = new Font(obj.Font.FontFamily, fontSize, obj.Font.Style, GraphicsUnit.Point);
         }
     }
 }

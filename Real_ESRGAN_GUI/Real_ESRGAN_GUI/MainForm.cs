@@ -61,11 +61,10 @@ namespace Real_ESRGAN_GUI
 
             // 获取新的 DPI 缩放因子
             float newScale = e.DeviceDpiNew / 96.0f;
-            Bounds = e.SuggestedRectangle;
             Parameters.systemScale = newScale;
 
             INITIALIZE_MAINFORM_SIZE(newScale);
-            UPDATE_MENUSTRIP_LAYOUT(newScale);
+            UPDATE_MENUSTRIP_LAYOUT(MenuStrip, newScale);
 
             // 强制重绘界面以适应新 DPI 下的字体和控件
             Invalidate();
@@ -1713,10 +1712,7 @@ namespace Real_ESRGAN_GUI
             Size = new Size((int)(baseWidth * scale), (int)(baseHeight * scale));
 
             INITIALIZE_TABLE_LAYOUT_PANEL_PIXEL(scale);
-            ButtonConfig.Font = new Font(ButtonConfig.Font.FontFamily, Font.Size, ButtonConfig.Font.Style);
-            ComboBoxScale.Font = new Font(ComboBoxScale.Font.FontFamily, Font.Size, ComboBoxScale.Font.Style);
-            ComboBoxModel.Font = new Font(ComboBoxModel.Font.FontFamily, Font.Size, ComboBoxModel.Font.Style);
-            ComboBoxExtension.Font = new Font(ComboBoxExtension.Font.FontFamily, Font.Size, ComboBoxExtension.Font.Style);
+            INITIALIZE_UI_FONT_SIZE();
         }
 
         private void UPDATE_MIN_MAX_SIZE(float scale)
@@ -1767,7 +1763,25 @@ namespace Real_ESRGAN_GUI
             panel.RowStyles[num].Height = fontSize;
         }
 
-        private void UPDATE_MENUSTRIP_LAYOUT(float scale)
+        private void INITIALIZE_UI_FONT_SIZE()
+        {
+            SET_FONT_SIZE(MenuStrip, Font.Size);
+            SET_FONT_SIZE(LabelScale, Font.Size);
+            SET_FONT_SIZE(ComboBoxScale, Font.Size);
+            SET_FONT_SIZE(LabelModel, Font.Size);
+            SET_FONT_SIZE(ComboBoxModel, Font.Size);
+            SET_FONT_SIZE(LabelExtension, Font.Size);
+            SET_FONT_SIZE(ComboBoxExtension, Font.Size);
+            SET_FONT_SIZE(CheckBoxHideProcess, Font.Size);
+            SET_FONT_SIZE(ButtonConfig, Font.Size);
+        }
+
+        private void SET_FONT_SIZE(Control obj, float fontSize)// 使用dynamic或Control绕过编译时的类型检查，直到运行时才解析
+        {
+            obj.Font = new Font(obj.Font.FontFamily, fontSize, obj.Font.Style, GraphicsUnit.Point);
+        }
+
+        private void UPDATE_MENUSTRIP_LAYOUT(MenuStrip MenuStrip, float scale)
         {
             if (MenuStrip != null)
             {
@@ -1787,6 +1801,8 @@ namespace Real_ESRGAN_GUI
 
             if (item is ToolStripMenuItem menuItem)
             {
+                menuItem.ImageScaling = ToolStripItemImageScaling.SizeToFit;
+
                 foreach (ToolStripItem subItem in menuItem.DropDownItems)
                 {
                     // 递归调用自身
