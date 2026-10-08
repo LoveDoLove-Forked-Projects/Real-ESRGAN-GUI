@@ -10,7 +10,6 @@ using System.Linq;
 using System.Windows.Forms;
 using System.Threading.Tasks;
 using System.Xml;
-using System.Text;
 
 namespace Real_ESRGAN_GUI
 {
@@ -21,9 +20,10 @@ namespace Real_ESRGAN_GUI
         public static class Parameters
         {
             public readonly static string workPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+            public readonly static string extractPath = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
             public readonly static string xmlPath = Path.Combine(workPath, "Real_ESRGAN_GUI.xml");
             public readonly static string appConfigPath = Path.Combine(workPath, "Real_ESRGAN_GUI.exe.config");
-            public readonly static string realesrganFolderPath = Path.Combine(workPath, "Real_ESRGAN_GUI_Components");
+            public readonly static string realesrganFolderPath = Path.Combine(extractPath, "Real_ESRGAN_GUI_WinForm");
             public readonly static string realesrganPath = Path.Combine(realesrganFolderPath, "realesrgan.exe");
             public readonly static string vcomp140Path = Path.Combine(realesrganFolderPath, "vcomp140.dll");
             public readonly static string vcomp140dPath = Path.Combine(realesrganFolderPath, "vcomp140d.dll");
@@ -201,43 +201,29 @@ namespace Real_ESRGAN_GUI
 
         private bool CHECK_PATH_READ_WRITE(string path, out Exception error)
         {
-            error = null; // 初始化异常为 null
-
+            error = null;
+            string checkFilePath = Path.Combine(
+                path, "~testFile_" + Guid.NewGuid().ToString("N") + ".tmp");
             try
             {
-                // 检查可写性
-                string checkFilePath = Path.Combine(path, "Directory_checker");
-
-                // 尝试写入
-                using (FileStream testFile = File.Create(checkFilePath))
+                using (var fs = new FileStream(checkFilePath, FileMode.CreateNew,
+                                               FileAccess.Write, FileShare.None))
                 {
-                    // 写入一些数据（随意）
-                    byte[] info = new UTF8Encoding(true).GetBytes("dir check");
-                    testFile.Write(info, 0, info.Length);
+                    fs.WriteByte(0);
                 }
-
-                // 尝试读取
-                using (FileStream testFile = File.OpenRead(checkFilePath))
+                using (var fs = new FileStream(checkFilePath, FileMode.Open,
+                                               FileAccess.Read, FileShare.Read))
                 {
-                    // 尝试读取数据
-                    byte[] buffer = new byte[1024];
-                    testFile.Read(buffer, 0, buffer.Length);
+                    fs.ReadByte();
                 }
-
-                // 删除测试文件
-                File.Delete(checkFilePath);
-
-                return true; // 两者都成功
+                return true;
             }
-            catch (UnauthorizedAccessException unauthorizedEx)
+            catch (UnauthorizedAccessException ex) { error = ex; return false; }
+            catch (Exception ex) { error = ex; return false; }
+            finally
             {
-                error = unauthorizedEx;
-                return false; // 不具备权限
-            }
-            catch (Exception otherEx)
-            {
-                error = otherEx;
-                return false; // 发生其他异常
+                try { if (File.Exists(checkFilePath)) File.Delete(checkFilePath); }
+                catch { /* 清理失败不影响判定 */ }
             }
         }
 
